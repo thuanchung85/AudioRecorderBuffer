@@ -26,7 +26,7 @@ import java.net.UnknownHostException
 import java.util.Arrays
 
 
-class MainActivity : AppCompatActivity(){
+class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener{
 
     var permissionsGranted: Boolean = false
     var permissions = arrayOf(Manifest.permission.RECORD_AUDIO)
@@ -39,6 +39,8 @@ class MainActivity : AppCompatActivity(){
     private var okHttpClient_WebSocket = OkHttpClient()
     private var mWebSocket: WebSocket? = null
 
+    private lateinit var timer: Timer
+    private lateinit var mwaveformView: WaveformView
     //==========+ON CREATE+=====//
     override fun onDestroy() {
         super.onDestroy()
@@ -54,6 +56,8 @@ class MainActivity : AppCompatActivity(){
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        timer = Timer(this)
+        mwaveformView = findViewById(R.id.waveformView)
         mTextView = findViewById(R.id.textView)
         mTextView2 = findViewById(R.id.textView2)
         mTextView3 = findViewById(R.id.textView3)
@@ -106,10 +110,13 @@ class MainActivity : AppCompatActivity(){
     var recorder: AudioRecord? = null
     var minBufSize: Int = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
 
+    var cAmplitude: Int = 0
     fun startStreaming() {
+        timer.start()
         //====TRY SEND MESSAGE TO WEBSOCKET===//
         mWebSocket?.send("HELLO WEBSOCKET SERVER")
         mainViewModel.setMessage(Pair(true,"HELLO WEBSOCKET SERVER"))
+
         val streamThread = Thread {
             try {
 
@@ -143,7 +150,7 @@ class MainActivity : AppCompatActivity(){
                  fun getShort(argB1: Byte, argB2: Byte): Short {
                     return (argB1.toInt() and 0xFF or (argB2.toInt() shl 8)).toShort()
                 }
-                 var cAmplitude: Int = 0
+
                 while (status === true) {
                     //reading data from MIC into buffer
 
@@ -175,7 +182,7 @@ class MainActivity : AppCompatActivity(){
                     }
                     cAmplitude = 0
                     // Add a delay of 1 second
-                    Thread.sleep(1000)
+                    Thread.sleep(100)
                 }
 
             } catch (e: UnknownHostException) {
@@ -201,6 +208,16 @@ class MainActivity : AppCompatActivity(){
             else{
                 Log.e("mLOG", "mLOG: Permission Granted")
             }
+        }
+    }
+
+    override fun onTimerTick(duration: String) {
+        Log.e("mLOG", "mLOG: $cAmplitude")
+        if (cAmplitude > 0) {
+            mwaveformView.addAmplitude(cAmplitude.toFloat())
+        }
+        else{
+            mwaveformView.addAmplitude(100f)
         }
     }
 
