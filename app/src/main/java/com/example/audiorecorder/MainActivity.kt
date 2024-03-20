@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener{
 
     var cAmplitude: Int = 0
     fun startStreaming() {
-        timer.start()
+        //timer.start()
         //====TRY SEND MESSAGE TO WEBSOCKET===//
         mWebSocket?.send("HELLO WEBSOCKET SERVER")
         mainViewModel.setMessage(Pair(true,"HELLO WEBSOCKET SERVER"))
@@ -167,6 +167,12 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener{
                     Log.e("VS", "mLOG cAmplitude- > ${cAmplitude}")
                     runOnUiThread {
                         mTextView.setText("Biên Độ Âm Thanh: \n ${cAmplitude}")
+                        if (cAmplitude > 0) {
+                            mwaveformView.addAmplitude(cAmplitude.toFloat())
+                        }
+                        else{
+                            mwaveformView.addAmplitude(100f)
+                        }
                     }
 
                     //push to websocket
@@ -174,7 +180,7 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener{
                     val  byteBufferString = ByteString.of(*byteArray)
                     Log.e("VS", "mLOG byteBufferString ${byteBufferString}")
                     mWebSocket?.send(byteBufferString)
-                    //mainViewModel.setMessage(Pair(true,byteBufferString.toString()))
+                    mainViewModel.setMessage(Pair(true,byteBufferString.toString()))
                     runOnUiThread {
 
                         mTextView2.setText("ByteArrayBuffer: ${Arrays.toString(byteArray)}.")
@@ -213,12 +219,7 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener{
 
     override fun onTimerTick(duration: String) {
         Log.e("mLOG", "mLOG: $cAmplitude")
-        if (cAmplitude > 0) {
-            mwaveformView.addAmplitude(cAmplitude.toFloat())
-        }
-        else{
-            mwaveformView.addAmplitude(100f)
-        }
+
     }
 
 
